@@ -1,0 +1,190 @@
+# EcoMotorTwin configuration
+# All magic numbers live here. Paths are relative to project root.
+
+project:
+  name: EcoMotorTwin
+  version: 1.0.0
+
+paths:
+  data_dir: data
+  csv_path: data/motor_data.csv
+  labelled_csv_path: data/motor_data_labelled.csv
+  db_path: data/ecomotortwin.db
+  models_dir: models_ml
+  metrics_path: models_ml/metrics.json
+  figures_dir: docs/figures
+  logs_dir: logs
+  config_path: config/config.yaml
+
+simulator:
+  seed: 42
+  # Training data: 7 days at 1 sample/minute
+  history_days: 7
+  history_sample_interval_sec: 60
+  # Live mode: 1 sample/sec
+  live_sample_interval_sec: 1
+  # Fault injection windows (fractions of total duration) - reproducible
+  fault_windows:
+    - motor: M2_Pump
+      fault: bearing_degradation
+      start_frac: 0.30
+      end_frac: 0.45
+      ramp_min: 30
+    - motor: M3_Compressor
+      fault: overload
+      start_frac: 0.55
+      end_frac: 0.65
+      ramp_min: 20
+    - motor: M1_Conveyor
+      fault: voltage_sag
+      start_frac: 0.72
+      end_frac: 0.80
+      ramp_min: 15
+    - motor: M4_ProcessMachine
+      fault: overheating
+      start_frac: 0.85
+      end_frac: 0.95
+      ramp_min: 25
+  # Multi-motor process-load case (must NOT be flagged as motor fault)
+  process_load_window:
+    start_frac: 0.15
+    end_frac: 0.22
+    load_increase: 0.25
+
+motors:
+  M1_Conveyor:
+    role: conveyor/drive
+    nominal:
+      voltage_v: 400.0
+      current_a: 12.0
+      power_kw: 6.5
+      temperature_c: 45.0
+      rpm: 1450.0
+      vibration_g: 0.08
+    limits:
+      current_a_warning: 15.0
+      current_a_critical: 18.0
+      temperature_c_warning: 65.0
+      temperature_c_critical: 80.0
+      vibration_g_warning: 0.15
+      vibration_g_critical: 0.25
+    production_share: 0.30
+    has_pressure: false
+    has_flow: false
+  M2_Pump:
+    role: pump/process flow
+    nominal:
+      voltage_v: 400.0
+      current_a: 18.0
+      power_kw: 10.0
+      temperature_c: 50.0
+      rpm: 2900.0
+      vibration_g: 0.10
+      pressure_bar: 4.0
+      flow_lpm: 120.0
+    limits:
+      current_a_warning: 22.0
+      current_a_critical: 26.0
+      temperature_c_warning: 70.0
+      temperature_c_critical: 85.0
+      vibration_g_warning: 0.18
+      vibration_g_critical: 0.30
+    production_share: 0.25
+    has_pressure: true
+    has_flow: true
+  M3_Compressor:
+    role: compressor/fan
+    nominal:
+      voltage_v: 400.0
+      current_a: 25.0
+      power_kw: 14.0
+      temperature_c: 55.0
+      rpm: 1450.0
+      vibration_g: 0.12
+      pressure_bar: 7.0
+      flow_lpm: 200.0
+    limits:
+      current_a_warning: 30.0
+      current_a_critical: 35.0
+      temperature_c_warning: 75.0
+      temperature_c_critical: 90.0
+      vibration_g_warning: 0.20
+      vibration_g_critical: 0.35
+    production_share: 0.25
+    has_pressure: true
+    has_flow: true
+  M4_ProcessMachine:
+    role: process machine
+    nominal:
+      voltage_v: 400.0
+      current_a: 20.0
+      power_kw: 11.0
+      temperature_c: 48.0
+      rpm: 1750.0
+      vibration_g: 0.09
+    limits:
+      current_a_warning: 24.0
+      current_a_critical: 28.0
+      temperature_c_warning: 68.0
+      temperature_c_critical: 82.0
+      vibration_g_warning: 0.16
+      vibration_g_critical: 0.28
+    production_share: 0.20
+    has_pressure: false
+    has_flow: false
+
+# Process coupling: M1 -> M2 -> M3 -> M4
+process_chain:
+  - from: M1_Conveyor
+    to: M2_Pump
+    coupling: 0.6
+  - from: M2_Pump
+    to: M3_Compressor
+    coupling: 0.5
+  - from: M3_Compressor
+    to: M4_ProcessMachine
+    coupling: 0.4
+
+cell:
+  base_production_units_h: 500.0
+  ambient_temp_c: 25.0
+
+twin:
+  health_healthy_threshold: 80
+  health_warning_threshold: 60
+  thermal_time_constant_min: 30.0
+  vibration_rms_window: 10
+
+ai:
+  baseline_model: gradient_boosting
+  anomaly_method: isolation_forest
+  contamination: 0.02
+  zscore_threshold: 3.0
+  ewma_alpha: 0.1
+  ewma_threshold: 2.5
+  classifier_model: random_forest
+  train_test_split: 0.25
+  rolling_windows: [1, 5, 15]
+  trend_window: 60
+  min_samples_for_baseline: 100
+  # Live alerting (all thresholds live in config)
+  alert_threshold: 0.5        # anomaly score above which an alert is raised
+  alert_cooldown_min: 5       # min minutes between repeat alerts for same motor+fault
+  health_history_write_every_n: 10   # write health_history every N loop ticks
+  energy_kpi_write_every_n: 10       # write energy_kpi every N loop ticks
+  ai_buffer_len: 20           # rolling rows per motor used for live inference
+
+energy:
+  sec_baseline_window: 1440
+  sec_waste_threshold: 1.15
+
+api:
+  host: 0.0.0.0
+  port: 8000
+  ws_interval_sec: 1.0
+  cors_origins:
+    - http://localhost:5173
+    - http://127.0.0.1:5173
+
+frontend:
+  port: 5173

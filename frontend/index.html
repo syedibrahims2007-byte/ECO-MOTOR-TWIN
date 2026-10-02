@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EcoMotorTwin — Four-Motor Digital Twin</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="header">
+      <div class="header-left">
+        <h1>EcoMotorTwin</h1>
+        <span class="subtitle">AI-Enabled Four-Motor Digital Twin</span>
+      </div>
+      <div class="header-right">
+        <div id="connection-badge" class="badge badge-disconnected">
+          <span class="dot"></span>
+          <span id="connection-text">Disconnected</span>
+        </div>
+        <div id="sim-status" class="badge badge-sim">
+          <span class="dot"></span>
+          <span>Simulator Active</span>
+        </div>
+      </div>
+    </header>
+
+    <div id="loading-overlay" class="loading-overlay">
+      <div class="spinner"></div>
+      <p>Loading 3D Digital Twin...</p>
+    </div>
+
+    <main class="main-content">
+      <!-- 3D View -->
+      <section class="panel panel-3d">
+        <div class="panel-header">
+          <h2>3D Digital Twin</h2>
+          <div class="legend">
+            <span class="legend-item"><span class="legend-color healthy"></span>Healthy</span>
+            <span class="legend-item"><span class="legend-color warning"></span>Warning</span>
+            <span class="legend-item"><span class="legend-color critical"></span>Critical</span>
+          </div>
+        </div>
+        <div id="three-container" class="three-container"></div>
+        <div id="motor-labels" class="motor-labels"></div>
+      </section>
+
+      <!-- Dashboard Grid -->
+      <div class="dashboard-grid">
+        <!-- Motor Status Cards -->
+        <section class="panel panel-cards">
+          <div class="panel-header"><h2>Motor Status</h2></div>
+          <div id="motor-cards" class="motor-cards"></div>
+        </section>
+
+        <!-- Cell KPIs -->
+        <section class="panel panel-kpis">
+          <div class="panel-header"><h2>Cell KPIs</h2></div>
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-label">Total Power</div>
+              <div id="kpi-power" class="kpi-value">—</div>
+              <div class="kpi-unit">kW</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Total Energy</div>
+              <div id="kpi-energy" class="kpi-value">—</div>
+              <div class="kpi-unit">kWh</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Production</div>
+              <div id="kpi-production" class="kpi-value">—</div>
+              <div class="kpi-unit">units/h</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">SEC</div>
+              <div id="kpi-sec" class="kpi-value">—</div>
+              <div class="kpi-unit">kWh/unit</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Charts -->
+        <section class="panel panel-charts">
+          <div class="panel-header">
+            <h2>Live Trends</h2>
+            <select id="chart-motor-select" class="select">
+              <option value="M1_Conveyor">M1 Conveyor</option>
+              <option value="M2_Pump">M2 Pump</option>
+              <option value="M3_Compressor">M3 Compressor</option>
+              <option value="M4_ProcessMachine">M4 Process Machine</option>
+            </select>
+          </div>
+          <div class="charts-grid">
+            <div class="chart-container">
+              <canvas id="chart-current"></canvas>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-power"></canvas>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-temp"></canvas>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-vibration"></canvas>
+            </div>
+          </div>
+        </section>
+
+        <!-- Health Gauges -->
+        <section class="panel panel-health">
+          <div class="panel-header"><h2>Health Index</h2></div>
+          <div id="health-gauges" class="health-gauges"></div>
+        </section>
+
+        <!-- Alerts -->
+        <section class="panel panel-alerts">
+          <div class="panel-header"><h2>Alerts</h2></div>
+          <div id="alert-feed" class="alert-feed">
+            <div class="alert-empty">No alerts</div>
+          </div>
+        </section>
+
+        <!-- Maintenance -->
+        <section class="panel panel-maintenance">
+          <div class="panel-header"><h2>Maintenance</h2></div>
+          <div id="maintenance-panel" class="maintenance-panel"></div>
+        </section>
+
+        <!-- Fault Injection -->
+        <section class="panel panel-fault">
+          <div class="panel-header"><h2>Fault Injection (Demo)</h2></div>
+          <div class="fault-controls">
+            <select id="fault-motor" class="select">
+              <option value="M1_Conveyor">M1 Conveyor</option>
+              <option value="M2_Pump">M2 Pump</option>
+              <option value="M3_Compressor">M3 Compressor</option>
+              <option value="M4_ProcessMachine">M4 Process Machine</option>
+            </select>
+            <select id="fault-type" class="select">
+              <option value="bearing_degradation">Bearing Degradation</option>
+              <option value="overheating">Overheating</option>
+              <option value="overload">Overload</option>
+              <option value="imbalance">Imbalance</option>
+              <option value="voltage_sag">Voltage Sag</option>
+            </select>
+            <button id="btn-inject-fault" class="btn btn-warning">Inject Fault</button>
+            <button id="btn-reset-sim" class="btn btn-secondary">Reset Sim</button>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

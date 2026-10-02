@@ -1,0 +1,1 @@
+"""EcoMotorTwin backend application."""
